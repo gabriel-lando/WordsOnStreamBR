@@ -80,7 +80,7 @@ while (true) {
     }, {})
   );
 
-  process.stdout.write("\033c");
+  console.clear();
   console.log("Word: " + word.toUpperCase());
 
   result.forEach((element) => {
