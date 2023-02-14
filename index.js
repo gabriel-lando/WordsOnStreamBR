@@ -30,7 +30,7 @@ allFileContents.split(/\r?\n/).forEach((line) => {
 let wordsKeys = Array.from(wordsTable.keys());
 
 while (true) {
-  let word = readlineSync.question("Enter a word: ");
+  let word = readlineSync.question("\n\nEnter a word: ");
   const newKey = charsInAlphaOrder(word);
 
   let allWords = [];
@@ -81,10 +81,10 @@ while (true) {
   );
 
   process.stdout.write("\033c");
-  console.log("Word: " + word.toUpperCase() + "\n");
+  console.log("Word: " + word.toUpperCase());
 
   result.forEach((element) => {
-    console.log("Word size: " + element[0].length);
+    console.log("\nWord size: " + element[0].length);
     console.log(util.inspect(element, { colors: true, maxArrayLength: null }));
   });
 }
