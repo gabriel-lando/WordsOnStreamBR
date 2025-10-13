@@ -1,19 +1,26 @@
-const fs = require("fs");
-const util = require("util");
-var readlineSync = require("readline-sync");
+const fs = require('fs');
+const util = require('util');
+var readlineSync = require('readline-sync');
+
+const fileName = 'dicionario-br.txt';
+
+if (!fs.existsSync(fileName)) {
+  console.log('File not found!');
+  process.exit(1);
+}
 
 let wordsTable = new Map();
 
 function charsInAlphaOrder(str) {
   return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .split("")
+    .split('')
     .sort();
 }
 
-const allFileContents = fs.readFileSync("br-utf8.txt", "utf-8");
+const allFileContents = fs.readFileSync(fileName, 'utf-8');
 allFileContents.split(/\r?\n/).forEach((line) => {
   const word = line.trim();
 
@@ -30,7 +37,7 @@ allFileContents.split(/\r?\n/).forEach((line) => {
 let wordsKeys = Array.from(wordsTable.keys());
 
 while (true) {
-  let word = readlineSync.question("\n\nEnter a word: ");
+  let word = readlineSync.question('\n\nEnter a word: ');
   const newKey = charsInAlphaOrder(word);
 
   let allWords = [];
@@ -81,10 +88,10 @@ while (true) {
   );
 
   console.clear();
-  console.log("Word: " + word.toUpperCase());
+  console.log('Word: ' + word.toUpperCase());
 
   result.forEach((element) => {
-    console.log("\nWord size: " + element[0].length);
+    console.log('\nWord size: ' + element[0].length);
     console.log(util.inspect(element, { colors: true, maxArrayLength: null }));
   });
 }
