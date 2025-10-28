@@ -47,6 +47,54 @@ function canFormWord(sourceFreq, targetKey) {
   return true;
 }
 
+// Check if a word matches the pattern with wildcards
+function matchesWildcardPattern(word, pattern) {
+  if (word.length !== pattern.length) {
+    return false;
+  }
+
+  const normalizedWord = word
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const normalizedPattern = pattern
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  // Get known characters (non-wildcard) from pattern
+  const knownChars = [];
+  const wildcardCount = (normalizedPattern.match(/\*/g) || []).length;
+
+  for (let i = 0; i < normalizedPattern.length; i++) {
+    if (normalizedPattern[i] !== '*') {
+      knownChars.push(normalizedPattern[i]);
+    }
+  }
+
+  // Check if word has all the required known characters
+  const wordChars = normalizedWord.split('');
+  const knownCharsCopy = [...knownChars];
+
+  // Remove known characters from word chars
+  for (let i = 0; i < knownCharsCopy.length; i++) {
+    const charIndex = wordChars.indexOf(knownCharsCopy[i]);
+    if (charIndex === -1) {
+      return false; // Required character not found
+    }
+    wordChars.splice(charIndex, 1); // Remove the found character
+  }
+
+  // Remaining characters should equal the number of wildcards
+  return wordChars.length === wildcardCount;
+}
+
+// Check if input has wildcards and needs pattern matching
+function hasWildcards(str) {
+  return str.includes('*');
+}
+
 console.log('Loading dictionary...');
 const allFileContents = fs.readFileSync(fileName, 'utf-8');
 allFileContents.split(/\r?\n/).forEach((line) => {
@@ -66,30 +114,46 @@ let wordsKeys = Array.from(wordsTable.keys());
 console.log(`Dictionary loaded: ${wordsKeys.length} unique word patterns`);
 
 while (true) {
-  let word = readlineSync.question('\n\nEnter a word: ');
-  const newKey = charsInAlphaOrder(word);
-  const sourceFreq = getCharFrequency(newKey);
+  let word = readlineSync.question('\n\nEnter a word (use * for wildcards): ');
 
   let allWords = [];
 
-  // Optimized search with early rejection
-  for (let idx = 0; idx < wordsKeys.length; idx++) {
-    const dictKey = wordsKeys[idx];
+  if (hasWildcards(word)) {
+    // Wildcard matching: search through all words in dictionary
+    for (let idx = 0; idx < wordsKeys.length; idx++) {
+      const dictKey = wordsKeys[idx];
+      const words = wordsTable.get(dictKey);
 
-    // Early rejection: if dictionary word is longer than input, skip
-    if (dictKey.length > newKey.length) {
-      continue;
+      for (let i = 0; i < words.length; i++) {
+        if (matchesWildcardPattern(words[i], word)) {
+          allWords.push(words[i]);
+        }
+      }
     }
+  } else {
+    // Original anagram logic
+    const newKey = charsInAlphaOrder(word);
+    const sourceFreq = getCharFrequency(newKey);
 
-    // Fast character frequency check
-    if (!canFormWord(sourceFreq, dictKey)) {
-      continue;
-    }
+    // Optimized search with early rejection
+    for (let idx = 0; idx < wordsKeys.length; idx++) {
+      const dictKey = wordsKeys[idx];
 
-    // If passed frequency check, add all words with this pattern
-    const words = wordsTable.get(dictKey);
-    for (let i = 0; i < words.length; i++) {
-      allWords.push(words[i]);
+      // Early rejection: if dictionary word is longer than input, skip
+      if (dictKey.length > newKey.length) {
+        continue;
+      }
+
+      // Fast character frequency check
+      if (!canFormWord(sourceFreq, dictKey)) {
+        continue;
+      }
+
+      // If passed frequency check, add all words with this pattern
+      const words = wordsTable.get(dictKey);
+      for (let i = 0; i < words.length; i++) {
+        allWords.push(words[i]);
+      }
     }
   }
 
